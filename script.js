@@ -12,14 +12,10 @@ async function getEvents() {
         const response = await fetch(API_URL);
         const json = await response.json();
         state.events = json.data;
-
     } catch (error) {
         console.error(error);
     }
 }
-console.log(state.events);
-console.log(state.events.length);
-console.log(getEvents());
 
 //ask the API to add events
 async function addEvent(event) {
@@ -35,12 +31,14 @@ async function addEvent(event) {
         if (json.error) {
             throw new Error(json.error.message);
         }
+        // Add the new event to the state.events array
+        state.events.push(json.data);
     } catch (error) {
         console.error(error);
     }
 }
-//rennder the events
 
+//render the events
 function renderEvents() {
     const eventsList = document.getElementById('events-list');
 
@@ -57,12 +55,16 @@ function renderEvents() {
         <p>${event.location}</p>
         `;
 
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        card.appendChild(deleteButton);
+
         return card;
     });
+
     eventsList.replaceChildren(...eventsCard);
-
-
 }
+
 //sync and render
 async function render() {
     await getEvents();
@@ -71,21 +73,18 @@ async function render() {
 
 //initial render
 render();
+console.log(state)
 
 const form = document.querySelector("form");
 form.addEventListener("submit", async (event) => {
-
-    event.preventDefualt();
-    const events = {
-        name: form.eventName.value,
+    event.preventDefault();
+    const party = {
+        name: form.partyName.value,
         date: form.date.value,
         description: form.description.value,
         location: form.location.value,
     };
 
-    await addEvent(events);
+    await addEvent(party);
     render();
-}
-
-
-)
+});
