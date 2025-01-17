@@ -20,24 +20,39 @@ async function getEvents() {
 //ask the API to add events
 async function addEvent(event) {
     try {
+        const dateWithTime = event.date + "T00:00:00Z";
+
+        const eventWithTime = { ...event, date: dateWithTime }
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(event),
+            body: JSON.stringify(eventWithTime),
         });
         const json = await response.json();
         if (json.error) {
             throw new Error(json.error.message);
         }
-        // Add the new event to the state.events array
+
         state.events.push(json.data);
     } catch (error) {
         console.error(error);
     }
 }
-
+async function deleteEvent(eventId) {
+    try {
+        const response = await fetch(`${API_URL}/${eventId}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            throw new Error('Failed to delete event');
+        }
+        state.events = state.events.filter(event => event.id !== eventId);
+    } catch (error) {
+        console.error(error);
+    }
+}
 //render the events
 function renderEvents() {
     const eventsList = document.getElementById('events-list');
@@ -57,12 +72,15 @@ function renderEvents() {
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
+        deleteButton.setAttribute('data-id', event.id);
         card.appendChild(deleteButton);
 
         return card;
     });
 
     eventsList.replaceChildren(...eventsCard);
+    addDeleteEventListeners();
+
 }
 
 //sync and render
@@ -74,17 +92,23 @@ async function render() {
 //initial render
 render();
 console.log(state)
+function addDeleteEventListeners() {
+    const deleteButtons = document.querySelectorAll('.delete-button');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', handleDelete);
+    });
 
-const form = document.querySelector("form");
-form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const party = {
-        name: form.partyName.value,
-        date: form.date.value,
-        description: form.description.value,
-        location: form.location.value,
-    };
+    const form = document.querySelector("form");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const newEvent = {
+            name: form.partyName.value,
+            date: form.date.value,
+            description: form.description.value,
+            location: form.location.value,
+        };
 
-    await addEvent(party);
-    render();
-});
+        await addEvent(newEvent);
+        render();
+    });
+};
