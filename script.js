@@ -40,17 +40,20 @@ async function addEvent(event) {
         console.error(error);
     }
 }
-async function deleteEvent(eventId) {
+async function deleteEvent(id) {
     try {
-        const response = await fetch(`${API_URL}/${eventId}`, {
-            method: 'DELETE',
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: "DELETE",
         });
+
         if (!response.ok) {
-            throw new Error('Failed to delete event');
+            throw new Error(`Failed to delete event with ID: ${id}`)
         }
-        state.events = state.events.filter(event => event.id !== eventId);
+
+        state.events = state.events.filter((event) => event.id !== id);
+        render();
     } catch (error) {
-        console.error(error);
+        console.error("Error deleting event:", error);
     }
 }
 //render the events
@@ -63,23 +66,21 @@ function renderEvents() {
     }
     const eventsCard = state.events.map(event => {
         const card = document.createElement('li');
+        card.id = `event-${event.id}`;
         card.innerHTML = `
         <h2>${event.name}</h2>
         <p>${event.date}</p>
         <p>${event.description}</p>
         <p>${event.location}</p>
+        <button class="delete-button" data-id="${event.id}">Delete</button>
         `;
 
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.setAttribute('data-id', event.id);
-        card.appendChild(deleteButton);
 
         return card;
     });
 
     eventsList.replaceChildren(...eventsCard);
-    addDeleteEventListeners();
+
 
 }
 
@@ -92,23 +93,24 @@ async function render() {
 //initial render
 render();
 console.log(state)
-function addDeleteEventListeners() {
-    const deleteButtons = document.querySelectorAll('.delete-button');
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', handleDelete);
-    });
 
-    const form = document.querySelector("form");
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const newEvent = {
-            name: form.partyName.value,
-            date: form.date.value,
-            description: form.description.value,
-            location: form.location.value,
-        };
 
-        await addEvent(newEvent);
-        render();
-    });
-};
+const form = document.querySelector("form");
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const newEvent = {
+        name: form.partyName.value,
+        date: form.date.value,
+        description: form.description.value,
+        location: form.location.value,
+    };
+
+    await addEvent(newEvent);
+    render();
+});
+const list = document.getElementById("events-list");
+list.addEventListener("click", (event) => {
+    if (event.target.classList.contains("delete-button")) {
+        event.target.parentNode.remove();
+    }
+});
