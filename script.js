@@ -22,17 +22,17 @@ async function getEvents() {
 
 //ask the API to add events//
 
-async function addEvent(event) {
+async function addEvent(eventDate) {
     try {
-        const dateWithTime = event.date + "T00:00:00Z";
+        // const dateWithTime = event.date + "T00:00:00Z";
+        const date = new Date(eventDate);
 
-        const eventWithTime = { ...event, date: dateWithTime };
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(eventWithTime),
+            body: JSON.stringify(eventDate),
         });
 
         const json = await response.json();
@@ -61,6 +61,7 @@ function renderEvents() {
         card.innerHTML = `
         <h2>${event.name}</h2>
         <p>${event.date}</p>
+        <p>${event.time}</p>
         <p>${event.description}</p>
         <p>${event.location}</p>
         <button class="delete-button">Delete</button>
@@ -90,9 +91,13 @@ console.log(state)
 const form = document.querySelector("form");
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const date = form.date.value;
+    const time = form.time.value;
+    const datetimeString = new Date(`${date}T${time}`);
+
     const newEvent = {
         name: form.partyName.value,
-        date: form.date.value,
+        date: datetimeString,
         description: form.description.value,
         location: form.location.value,
     };
